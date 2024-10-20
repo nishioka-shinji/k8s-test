@@ -23,3 +23,22 @@ spec:
         name: imgproxy
       version: 0.9.0
   interval: 1m0s
+  values:
+    features:
+      # TODO: のちほど設定
+      # urlSignature:
+      #   key:
+      #   salt:
+      compression:
+        quality: "100"
+      presets:
+        definitions: thumb=rs:fill:400:400/format:webp
+        onlyPresets: true
+      # TODO: のちほど設定
+      # aws:
+      #   enabled: true
+      #   accountId:
+      #   accessKeyId:
+      #   secretAccessKey:
+      #   iamRoleName:
+      #   s3Region: ap-northeast-1
