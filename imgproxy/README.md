@@ -8,6 +8,6 @@ flux create source helm imgproxy --url https://helm.imgproxy.net/ --namespace im
 flux create helmrelease imgproxy --chart imgproxy \
   --source HelmRepository/imgproxy \
   --namespace imgproxy \
-  --chart-version 3.19.0 \
+  --chart-version 0.9.0 \
   --export >> imgproxy/imgproxy-helm.yaml
 ```

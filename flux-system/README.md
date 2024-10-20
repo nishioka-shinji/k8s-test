@@ -30,7 +30,7 @@ flux create kustomization k8s-test \
   --path="./" \
   --prune=true \
   --wait=true \
-  --interval=30m \
+  --interval=1m \
   --retry-interval=2m \
   --health-check-timeout=3m \
   --export >> flux-system/git-repository.yaml
