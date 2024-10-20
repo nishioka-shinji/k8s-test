@@ -16,7 +16,7 @@ metadata:
   name: k8s-test
   namespace: flux-system
 spec:
-  interval: 30m0s
+  interval: 1m0s
   path: ./
   prune: true
   retryInterval: 2m0s
