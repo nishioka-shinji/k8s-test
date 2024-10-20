@@ -9,7 +9,7 @@ export GITHUB_USER=<your-username>
 ```
 flux bootstrap github \
   --owner=$GITHUB_USER \
-  --repository=fleet-infra-kind \
+  --repository=k8s-test \
   --branch=main \
   --path=./ \
   --personal
@@ -18,7 +18,7 @@ flux bootstrap github \
 ## GitRepository作成
 ```
 flux create source git k8s-test \
-  --url=https://github.com/nishioka-shinji/k8s-test.git \
+  --url=ssh:git@github.com:nishioka-shinji/k8s-test.git \
   --branch=main \
   --interval=1m \
   --export > flux-system/git-repository.yaml

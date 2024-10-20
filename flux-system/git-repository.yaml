@@ -8,7 +8,7 @@ spec:
   interval: 1m0s
   ref:
     branch: main
-  url: https://github.com/nishioka-shinji/k8s-test.git
+  url: ssh:git@github.com:nishioka-shinji/k8s-test.git
 ---
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
