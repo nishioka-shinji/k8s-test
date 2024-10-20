@@ -11,7 +11,7 @@ spec:
     branch: main
   secretRef:
     name: flux-system
-  url: ssh://git@github.com/nishioka-shinji/k8s_test
+  url: ssh://git@github.com/nishioka-shinji/k8s-test
 ---
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
