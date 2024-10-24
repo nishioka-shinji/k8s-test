@@ -36,7 +36,7 @@ data:
       clusters:
       - name: some_service
         connect_timeout: 0.25s
-        type: LOGICAL_DNS
+        type: STRICT_DNS
         lb_policy: ROUND_ROBIN
         load_assignment:
           cluster_name: some_service
@@ -45,5 +45,5 @@ data:
             - endpoint:
                 address:
                   socket_address:
-                    address: imgproxy
+                    address: imgproxy-2
                     port_value: 8080
