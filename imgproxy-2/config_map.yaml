@@ -28,9 +28,9 @@ data:
                   domains: ["*"]
                   routes:
                   - match:
-                    safe_regex:
-                      google_re2: {}
-                      regex: "(^\/[0-9a-zA-Z_-]+\/thumb\/[0-9a-zA-Z_-]+$)|(^health$)"
+                      safe_regex:
+                        google_re2: {}
+                        regex: "(^\/[0-9a-zA-Z_-]+\/thumb\/[0-9a-zA-Z_-]+$)|(^health$)"
                     route: { cluster: some_service }
               http_filters:
               - name: envoy.filters.http.router
