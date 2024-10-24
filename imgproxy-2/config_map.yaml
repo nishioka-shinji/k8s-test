@@ -27,10 +27,7 @@ data:
                 - name: local_service
                   domains: ["*"]
                   routes:
-                  - match:
-                      safe_regex:
-                        google_re2: {}
-                        regex: "^health$"
+                  - match: { prefix: "/" }
                     route: { cluster: some_service }
               http_filters:
               - name: envoy.filters.http.router
