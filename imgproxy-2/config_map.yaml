@@ -36,7 +36,7 @@ data:
       clusters:
       - name: some_service
         connect_timeout: 0.25s
-        type: STRICT_DNS
+        type: STATIC
         lb_policy: ROUND_ROBIN
         load_assignment:
           cluster_name: some_service
