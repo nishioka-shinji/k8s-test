@@ -45,5 +45,5 @@ data:
             - endpoint:
                 address:
                   socket_address:
-                    address: imgproxy-2
+                    address: 127.0.0.1
                     port_value: 8080
