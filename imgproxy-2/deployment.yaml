@@ -17,13 +17,29 @@ spec:
     spec:
       terminationGracePeriodSeconds: 0
       containers:
-        - name: imgproxy-2
-          image: darthsim/imgproxy:v3.26
+        - name: envoy
+          image: envoyproxy/envoy-contrib:v1.32.0
           imagePullPolicy: IfNotPresent
           ports:
             - name: app-port
-              containerPort: 8080
+              containerPort: 10000
           resources:
             requests:
               cpu: 0.125
               memory: 50Mi
+          volumeMounts:
+          - name: imgproxy-config
+            mountPath: /etc/envoy
+        - name: imgproxy-2
+          image: darthsim/imgproxy:v3.26
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              cpu: 0.125
+              memory: 50Mi
+      volumes:
+      - name: imgproxy-config
+        configMap:
+          name: imgproxy-config
