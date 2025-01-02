@@ -33,6 +33,11 @@ spec:
         - name: imgproxy-2
           image: darthsim/imgproxy:v3.26
           imagePullPolicy: IfNotPresent
+          env:
+          - name: IMGPROXY_PROMETHEUS_BIND
+            value: :8081
+          - name: IMGPROXY_PROMETHEUS_NAMESPACE
+            value: imgproxy
           ports:
             - containerPort: 8080
           resources:
