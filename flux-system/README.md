@@ -5,6 +5,8 @@ https://fluxcd.io/flux/get-started/
 export GITHUB_TOKEN=<your-token>
 export GITHUB_USER=<your-username>
 ```
+### トークン作成はここ
+https://github.com/settings/tokens
 
 ```
 flux bootstrap github \
