@@ -40,6 +40,8 @@ spec:
             value: imgproxy
           ports:
             - containerPort: 8080
+            - name: metrics-port
+              containerPort: 8081
           resources:
             requests:
               cpu: 0.125
