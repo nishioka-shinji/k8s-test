@@ -8,9 +8,9 @@ flux create source helm prometheus-community \
 ```
 
 ```
-flux create helmrelease prometheus --chart prometheus \
+flux create helmrelease prometheus --chart kube-prometheus-stack \
   --source HelmRepository/prometheus \
   --namespace prometheus \
-  --chart-version 26.0.1 \
+  --chart-version 67.5.0 \
   --export >> prometheus/prometheus-helm.yaml
 ```

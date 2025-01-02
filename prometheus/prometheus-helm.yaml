@@ -16,10 +16,10 @@ metadata:
 spec:
   chart:
     spec:
-      chart: prometheus
+      chart: kube-prometheus-stack
       reconcileStrategy: ChartVersion
       sourceRef:
         kind: HelmRepository
         name: prometheus
-      version: 26.0.1
+      version: 67.5.0
   interval: 1m0s
