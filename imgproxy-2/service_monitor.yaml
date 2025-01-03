@@ -1,0 +1,16 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: imgproxy-2
+  namespace: imgproxy-2
+spec:
+  endpoints:
+    - path: /
+      port: "prometheus"
+      interval: 5s
+  namespaceSelector:
+    matchNames:
+      - imgproxy-2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: imgproxy-2
