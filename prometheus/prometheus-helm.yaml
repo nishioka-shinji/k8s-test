@@ -23,3 +23,7 @@ spec:
         name: prometheus-community
       version: 67.5.0
   interval: 1m0s
+  values:
+    prometheus:
+      prometheusSpec:
+        serviceMonitorSelectorNilUsesHelmValues: false
