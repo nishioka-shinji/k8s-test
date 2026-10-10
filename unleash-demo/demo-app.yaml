@@ -1,0 +1,137 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: unleash-app-code
+  namespace: unleash-demo
+data:
+  Gemfile: |
+    source 'https://rubygems.org'
+    gem 'sinatra'
+    gem 'puma'
+    gem 'rackup'
+    gem 'unleash'
+
+  app.rb: |
+    require 'sinatra'
+    require 'unleash'
+
+    set :bind, '0.0.0.0'
+    set :port, 80
+
+    # Unleash SDKの初期化
+    Unleash.configure do |config|
+      # クラスター内部のサービス経由で Unleash API に接続
+      config.url      = 'http://unleash.unleash.svc.cluster.local:4242/api'
+      config.app_name = 'sinatra-unleash-demo'
+      # 公開リポジトリのためトークンは置かない。Unleash GUI で発行した Client トークンに差し替える
+      config.custom_http_headers = {
+        'Authorization' => '<UNLEASH_CLIENT_API_TOKEN>'
+      }
+    end
+
+    # クライアントインスタンスの作成
+    UNLEASH_CLIENT = Unleash::Client.new
+
+    get '/' do
+      # フィーチャーフラグ show-welcome-message の評価
+      # (UnleashサーバーのGUIで作成する必要があります)
+      show_welcome = UNLEASH_CLIENT.is_enabled?('show-welcome-message', nil, false)
+
+      if show_welcome
+        body = <<~HTML
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>Unleash Sinatra Demo</title>
+            <style>
+              body { font-family: sans-serif; text-align: center; margin-top: 10%; background-color: #e0f2fe; color: #0369a1; }
+              .card { border: 1px solid #bae6fd; background: white; padding: 40px; display: inline-block; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+              h1 { font-size: 2.5em; margin-bottom: 10px; }
+              .badge { background-color: #0284c7; color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 0.9em; }
+            </style>
+          </head>
+          <body>
+            <div class="card">
+              <h1>🎉 Welcome to the Unleash Demo!</h1>
+              <p>Unleash GUIで作成したフィーチャーフラグが有効化されました！</p>
+              <p><span class="badge">Unleash: show-welcome-message is ON</span></p>
+            </div>
+          </body>
+          </html>
+        HTML
+      else
+        body = <<~HTML
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>Unleash Sinatra Demo</title>
+            <style>
+              body { font-family: sans-serif; text-align: center; margin-top: 10%; background-color: #fcfcfc; color: #475569; }
+              .card { border: 1px solid #e2e8f0; background: white; padding: 40px; display: inline-block; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+              h1 { font-size: 2.5em; margin-bottom: 10px; }
+              .badge { background-color: #64748b; color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 0.9em; }
+            </style>
+          </head>
+          <body>
+            <div class="card">
+              <h1>Hello World (Unleash)!</h1>
+              <p>Unleash の GUI 画面で 'show-welcome-message' というフラグを新規作成し、有効にしてください。</p>
+              <p><span class="badge">Unleash: show-welcome-message is OFF</span></p>
+            </div>
+          </body>
+          </html>
+        HTML
+      end
+
+      body
+    end
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: unleash-demo-app
+  namespace: unleash-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: unleash-demo-app
+  template:
+    metadata:
+      labels:
+        app: unleash-demo-app
+    spec:
+      containers:
+      - name: app
+        image: ruby:3.2
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          mkdir -p /myapp
+          cp -L /app-src/Gemfile /myapp/Gemfile
+          cp -L /app-src/app.rb /myapp/app.rb
+          cd /myapp
+          bundle install && bundle exec ruby app.rb
+        workingDir: /myapp
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: code-volume
+          mountPath: /app-src
+      volumes:
+      - name: code-volume
+        configMap:
+          name: unleash-app-code
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: unleash-demo-app
+  namespace: unleash-demo
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 80
+  selector:
+    app: unleash-demo-app

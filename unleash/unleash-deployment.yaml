@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: unleash
+  namespace: unleash
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: unleash
+  template:
+    metadata:
+      labels:
+        app: unleash
+    spec:
+      containers:
+      - name: unleash
+        image: unleashorg/unleash-server:8.2.0
+        env:
+        - name: DATABASE_URL
+          value: postgres://postgres:unleash@unleash-db:5432/unleash
+        - name: DATABASE_SSL
+          value: "false"
+        - name: UNLEASH_URL
+          value: http://localhost:4242
+        ports:
+        - containerPort: 4242

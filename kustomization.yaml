@@ -7,3 +7,8 @@ resources:
 - prometheus
 - authentik
 - caddy-demo
+- cert-manager
+- openfeature
+- openfeature-demo
+- unleash
+- unleash-demo

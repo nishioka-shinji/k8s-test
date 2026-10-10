@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: unleash-db
+  namespace: unleash
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: unleash-db
+  template:
+    metadata:
+      labels:
+        app: unleash-db
+    spec:
+      containers:
+      - name: db
+        image: postgres:15
+        env:
+        - name: POSTGRES_DB
+          value: unleash
+        - name: POSTGRES_USER
+          value: postgres
+        - name: POSTGRES_PASSWORD
+          value: unleash
+        ports:
+        - containerPort: 5432
