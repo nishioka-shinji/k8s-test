@@ -1,0 +1,14 @@
+apiVersion: core.openfeature.dev/v1beta1
+kind: FeatureFlag
+metadata:
+  name: demo-flags
+  namespace: openfeature-demo
+spec:
+  flagSpec:
+    flags:
+      show-welcome-message:
+        state: ENABLED
+        variants:
+          'on': true
+          'off': false
+        defaultVariant: 'off'

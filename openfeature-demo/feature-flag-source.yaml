@@ -1,0 +1,10 @@
+apiVersion: core.openfeature.dev/v1beta1
+kind: FeatureFlagSource
+metadata:
+  name: demo-flag-source
+  namespace: openfeature-demo
+spec:
+  sources:
+    - source: openfeature-demo/demo-flags
+      provider: kubernetes
+  port: 8013
