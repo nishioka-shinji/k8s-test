@@ -1,0 +1,43 @@
+{
+	admin off
+	auto_https off
+}
+
+:80 {
+	route {
+		# ログイン開始・コールバックは Authentik の埋め込み outpost が処理する
+		reverse_proxy /outpost.goauthentik.io/* http://authentik-server.authentik.svc.cluster.local
+
+		forward_auth http://authentik-server.authentik.svc.cluster.local {
+			uri /outpost.goauthentik.io/auth/caddy
+			copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Entitlements X-Authentik-Email X-Authentik-Name X-Authentik-Uid
+			trusted_proxies private_ranges
+		}
+
+		handle /hello {
+			header Content-Type "text/html; charset=utf-8"
+			respond <<HTML
+				<!doctype html>
+				<html lang="ja">
+				<head><meta charset="utf-8"><title>hello</title></head>
+				<body>
+				<p>こんにちは、{header.X-Authentik-Name}（{header.X-Authentik-Email}）さん</p>
+				<p><a href="/">ヘッダ一覧へ</a></p>
+				</body>
+				</html>
+				HTML 200
+		}
+
+		handle {
+			header Content-Type "text/plain; charset=utf-8"
+			respond <<TEXT
+				X-Authentik-Username: {header.X-Authentik-Username}
+				X-Authentik-Email: {header.X-Authentik-Email}
+				X-Authentik-Name: {header.X-Authentik-Name}
+				X-Authentik-Uid: {header.X-Authentik-Uid}
+				X-Authentik-Groups: {header.X-Authentik-Groups}
+				X-Authentik-Entitlements: {header.X-Authentik-Entitlements}
+				TEXT 200
+		}
+	}
+}

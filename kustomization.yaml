@@ -5,3 +5,5 @@ resources:
 # - imgproxy
 - imgproxy-2
 - prometheus
+- authentik
+- caddy-demo

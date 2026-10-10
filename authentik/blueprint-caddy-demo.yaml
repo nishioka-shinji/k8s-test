@@ -1,0 +1,54 @@
+# yaml-language-server: $schema=https://goauthentik.io/blueprints/schema.json
+version: 1
+metadata:
+  name: caddy-demo
+entries:
+# 参照するフローと scope mapping を作る blueprint を先に適用させる。
+# scope mapping が無いと provider 作成時の既定割り当てから漏れ、X-Authentik-Username 等が空になる
+- model: authentik_blueprints.metaapplyblueprint
+  attrs:
+    identifiers:
+      path: system/providers-oauth2.yaml
+    required: true
+- model: authentik_blueprints.metaapplyblueprint
+  attrs:
+    identifiers:
+      path: system/providers-proxy.yaml
+    required: true
+- model: authentik_blueprints.metaapplyblueprint
+  attrs:
+    identifiers:
+      path: default/flow-default-provider-authorization-implicit-consent.yaml
+    required: true
+- model: authentik_blueprints.metaapplyblueprint
+  attrs:
+    identifiers:
+      path: default/flow-default-provider-invalidation.yaml
+    required: true
+- model: authentik_providers_proxy.proxyprovider
+  id: provider
+  identifiers:
+    name: caddy-demo
+  attrs:
+    mode: forward_single
+    external_host: http://localhost:9100
+    authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-implicit-consent]]
+    invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
+# external ユーザーも入れるよう、ポリシーは付けない
+- model: authentik_core.application
+  identifiers:
+    slug: caddy-demo
+  attrs:
+    name: caddy-demo
+    provider: !KeyOf provider
+- model: authentik_outposts.outpost
+  identifiers:
+    managed: goauthentik.io/outposts/embedded
+  attrs:
+    name: authentik Embedded Outpost
+    type: proxy
+    # ブラウザのリダイレクト先を port-forward している Authentik に向ける
+    config:
+      authentik_host: http://localhost:9000
+    providers:
+    - !KeyOf provider

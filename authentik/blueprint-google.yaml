@@ -1,0 +1,53 @@
+# yaml-language-server: $schema=https://goauthentik.io/blueprints/schema.json
+version: 1
+metadata:
+  name: google-source
+entries:
+# 参照するフローとステージを作る default blueprint を先に適用させる
+- model: authentik_blueprints.metaapplyblueprint
+  attrs:
+    identifiers:
+      path: default/flow-default-authentication-flow.yaml
+    required: true
+- model: authentik_blueprints.metaapplyblueprint
+  attrs:
+    identifiers:
+      path: default/flow-default-source-authentication.yaml
+    required: true
+- model: authentik_blueprints.metaapplyblueprint
+  attrs:
+    identifiers:
+      path: default/flow-default-source-enrollment.yaml
+    required: true
+- model: authentik_sources_oauth.oauthsourcepropertymapping
+  id: username-from-email
+  identifiers:
+    name: google-username-from-email
+  attrs:
+    expression: |
+      return {"username": info.get("email")}
+- model: authentik_sources_oauth.oauthsource
+  id: google
+  identifiers:
+    slug: google
+  attrs:
+    name: Google
+    provider_type: google
+    # Client ID / Secret は Secret authentik-credentials から env で注入する
+    consumer_key: !Env GOOGLE_OAUTH_CLIENT_ID
+    consumer_secret: !Env GOOGLE_OAUTH_CLIENT_SECRET
+    authorization_url: https://accounts.google.com/o/oauth2/v2/auth
+    access_token_url: https://oauth2.googleapis.com/token
+    profile_url: https://openidconnect.googleapis.com/v1/userinfo
+    oidc_jwks_url: https://www.googleapis.com/oauth2/v3/certs
+    pkce: S256
+    authentication_flow: !Find [authentik_flows.flow, [slug, default-source-authentication]]
+    enrollment_flow: !Find [authentik_flows.flow, [slug, default-source-enrollment]]
+    user_property_mappings:
+    - !KeyOf username-from-email
+- model: authentik_stages_identification.identificationstage
+  identifiers:
+    name: default-authentication-identification
+  attrs:
+    sources:
+    - !KeyOf google

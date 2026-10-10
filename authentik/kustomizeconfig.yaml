@@ -1,0 +1,7 @@
+# configMapGenerator の hash 付き名を HelmRelease の valuesFrom にも反映させる
+nameReference:
+- kind: ConfigMap
+  version: v1
+  fieldSpecs:
+  - path: spec/valuesFrom/name
+    kind: HelmRelease

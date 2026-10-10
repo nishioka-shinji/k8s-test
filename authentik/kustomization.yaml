@@ -1,0 +1,32 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- namespace.yaml
+- authentik-helm.yaml
+configMapGenerator:
+# values.yaml は helm template でも検証するため、ファイルのまま ConfigMap 化して valuesFrom で渡す
+- name: authentik-values
+  namespace: authentik
+  files:
+  - values.yaml
+# values.yaml の blueprints.configMaps から名前で参照するので suffix を付けない
+- name: authentik-blueprint-google
+  namespace: authentik
+  files:
+  - blueprint-google.yaml
+  options:
+    disableNameSuffixHash: true
+- name: authentik-blueprint-caddy-demo
+  namespace: authentik
+  files:
+  - blueprint-caddy-demo.yaml
+  options:
+    disableNameSuffixHash: true
+- name: authentik-blueprint-mfa
+  namespace: authentik
+  files:
+  - blueprint-mfa.yaml
+  options:
+    disableNameSuffixHash: true
+configurations:
+- kustomizeconfig.yaml
