@@ -1,0 +1,71 @@
+# chart: goauthentik/authentik 2026.8.3（authentik-helm.yaml の HelmRelease が valuesFrom で読む）
+global:
+  # 機密値は手動作成の Secret authentik-credentials から注入する。
+  # env は chart 生成 Secret の envFrom より優先されるため、空の secret_key / password を上書きできる。
+  env:
+    - name: AUTHENTIK_SECRET_KEY
+      valueFrom:
+        secretKeyRef:
+          name: authentik-credentials
+          key: secret-key
+    - name: AUTHENTIK_POSTGRESQL__PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: authentik-credentials
+          key: password
+    # bootstrap blueprint が akadmin を作り Setup 完了にするので、初期セットアップ画面を経由しない
+    - name: AUTHENTIK_BOOTSTRAP_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: authentik-credentials
+          key: bootstrap-password
+    - name: AUTHENTIK_BOOTSTRAP_EMAIL
+      valueFrom:
+        secretKeyRef:
+          name: authentik-credentials
+          key: bootstrap-email
+    # blueprint-google.yaml の !Env で読む
+    - name: GOOGLE_OAUTH_CLIENT_ID
+      valueFrom:
+        secretKeyRef:
+          name: authentik-credentials
+          key: google-client-id
+    - name: GOOGLE_OAUTH_CLIENT_SECRET
+      valueFrom:
+        secretKeyRef:
+          name: authentik-credentials
+          key: google-client-secret
+
+authentik:
+  error_reporting:
+    enabled: false
+  # kind で動かす前提なので web ワーカー数を最小にしてメモリ消費を抑える
+  web:
+    workers: 1
+    threads: 2
+  # 初回起動時に blueprint が並列適用されると DB デッドロックで error になるため、タスクを直列に処理する
+  worker:
+    threads: 1
+
+server:
+  replicas: 1
+  ingress:
+    enabled: false
+
+worker:
+  replicas: 1
+
+postgresql:
+  enabled: true
+  auth:
+    existingSecret: authentik-credentials
+    secretKeys:
+      adminPasswordKey: postgres-password
+      userPasswordKey: password
+
+# authentik/ の kustomize で HelmRelease と同時に作る ConfigMap
+blueprints:
+  configMaps:
+    - authentik-blueprint-caddy-demo
+    - authentik-blueprint-google
+    - authentik-blueprint-mfa
