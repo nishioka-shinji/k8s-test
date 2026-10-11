@@ -4,7 +4,7 @@ Flux の HelmRelease で管理する。ルートの kustomization.yaml から `a
 
 chart: goauthentik/authentik `2026.8.3`
 
-手作業は Secret `authentik-credentials` の作成だけ。akadmin（bootstrap）、Google ソース、Caddy 動作確認アプリ（`caddy-demo/`）の Authentik 側設定、パスワードログインの MFA 必須化はすべてマニフェストと blueprint から作られる。
+手作業は Secret `authentik-credentials` の作成だけ。akadmin（bootstrap）、Google ソース、Caddy 動作確認アプリ（`caddy-demo/`）の Authentik 側設定、パスワードログインの MFA（メール OTP）必須化はすべてマニフェストと blueprint から作られる。
 
 ## 構成
 
@@ -12,10 +12,10 @@ chart: goauthentik/authentik `2026.8.3`
 |---|---|
 | `namespace.yaml` | Namespace `authentik` |
 | `authentik-helm.yaml` | HelmRepository `goauthentik`、HelmRelease `authentik`（values は `valuesFrom` で ConfigMap から読む） |
-| `values.yaml` | chart の values。kustomize の configMapGenerator で ConfigMap `authentik-values-<hash>` になる |
+| `values.yaml` | chart の values。kustomize の configMapGenerator で ConfigMap `authentik-values-<hash>` になる。グローバルのメール設定（`authentik.email`）は Mailpit（`mailpit/`）に向けている |
 | `blueprint-google.yaml` | blueprint。Google OAuth ソース `google`、property mapping `google-username-from-email`、`default-authentication-identification` ステージへのソース追加 |
 | `blueprint-caddy-demo.yaml` | blueprint。`caddy-demo/` の Caddy 動作確認アプリ向けの Proxy Provider / Application / outpost 割り当て（後述） |
-| `blueprint-mfa.yaml` | blueprint。パスワードログインの MFA（TOTP / WebAuthn）必須化（後述） |
+| `blueprint-mfa.yaml` | blueprint。パスワードログインの MFA（メール OTP）必須化と、メール OTP の登録用 flow / stage（後述） |
 
 blueprint の ConfigMap は `values.yaml` の `blueprints.configMaps` で worker にマウントされる。ConfigMap と HelmRelease は同じ kustomize で同時に apply され、helm-controller が install するのはその後なので、ConfigMap 不在で worker が起動しない問題は起きない。
 
@@ -80,16 +80,17 @@ kubectl -n flux-system wait --for=condition=Available deploy --all --timeout=300
 
 #### A. Flux bootstrap（GitHub の main を同期する）
 
-main にマージ済みの構成を入れる場合。手順は `flux-system/README.md` の `flux bootstrap github`。ルートの kustomization.yaml に含まれる flux-system / imgproxy-2 / prometheus / authentik / caddy-demo がすべて同期される。
+main にマージ済みの構成を入れる場合。手順は `flux-system/README.md` の `flux bootstrap github`。ルートの kustomization.yaml に含まれる flux-system / imgproxy-2 / prometheus / authentik / mailpit / caddy-demo などがすべて同期される。
 
 bootstrap は CLI のバージョンで `flux-system/gotk-components.yaml` を生成し直して main にコミットするので、意図せず上げないよう CLI は既存と同じ v2.4 系を使う。
 
 #### B. kubectl apply -k（マージ前のブランチを試す）
 
-GitHub 同期はせず、ローカルの `authentik/` と `caddy-demo/` だけを入れる。helm-controller / source-controller が HelmRelease を処理する。
+GitHub 同期はせず、ローカルの `authentik/`、`mailpit/`、`caddy-demo/` だけを入れる。helm-controller / source-controller が HelmRelease を処理する。
 
 ```sh
 kubectl apply -k authentik
+kubectl apply -k mailpit
 kubectl apply -k caddy-demo
 ```
 
@@ -100,6 +101,7 @@ authentik → caddy-demo の順を推奨する。逆順でも Caddy は Authenti
 ```sh
 kubectl -n authentik wait helmrelease/authentik --for=condition=Ready --timeout=15m
 kubectl -n authentik get pods
+kubectl -n mailpit get pods
 kubectl -n caddy-demo get pods
 ```
 
@@ -112,6 +114,7 @@ Ingress は使わず port-forward でアクセスする。
 ```sh
 kubectl -n authentik port-forward svc/authentik-server 9000:80
 kubectl -n caddy-demo port-forward svc/caddy 9100:80
+kubectl -n mailpit port-forward svc/mailpit 8025:8025
 ```
 
 http://localhost:9000/ から akadmin（bootstrap-password）か Google でログインする。
@@ -147,10 +150,24 @@ blueprint は埋め込み outpost の `providers` を一覧ごと上書きする
 `blueprint-mfa.yaml` は configMapGenerator で ConfigMap `authentik-blueprint-mfa`（suffix なし）になり、パスワードログインに MFA を必須にする。
 
 - 対象はパスワードログイン（認証フロー `default-authentication-flow`）のユーザー全員で、akadmin も含む。Google ログイン（`default-source-authentication`）は対象外
-- 使える方式は TOTP と WebAuthn（パスキー）だけ
-- MFA 未登録のユーザーは、パスワード入力後に TOTP か WebAuthn の登録を求められ、登録するまでログインできない。Google 経由で作られる external ユーザーはユーザーポータルに入れないため、登録はこのログイン時に行う
+- 使える方式はメール OTP だけ。コードは `values.yaml` の `authentik.email` に設定した SMTP（テスト用の Mailpit）から送られる
+- MFA 未登録のユーザーは、パスワード入力後にメール OTP の登録を求められ、登録するまでログインできない。ユーザーにメールアドレスがあればそこへ、なければ入力したアドレスへコードが送られ、入力すると登録される。Google 経由で作られる external ユーザーはユーザーポータルに入れないため、登録はこのログイン時に行う
+- 以前に登録した TOTP / WebAuthn デバイスは DB に残るが、validation では使われない
 
-blueprint は default blueprint が作るステージ `default-authentication-mfa-validation` の `not_configured_action`（`configure`）、`device_classes`（`totp` / `webauthn`）、`configuration_stages`（`default-authenticator-totp-setup` / `default-authenticator-webauthn-setup`）を上書きする。default blueprint はこのステージを name だけで定義しているため、worker 再起動などで default blueprint が再適用されても上書きした設定は戻らない。
+blueprint は次を作る / 上書きする。
+
+- flow `default-authenticator-email-setup`（designation `stage_configuration`）と、それに紐づく Email Authenticator ステージ `default-authenticator-email-setup`（`use_global_settings: true`）。authentik 2026.8 の default blueprint にはメール OTP の登録用 flow がないため、この blueprint で作る
+- default blueprint が作るステージ `default-authentication-mfa-validation` の `not_configured_action`（`configure`）、`device_classes`（`email`）、`configuration_stages`（`default-authenticator-email-setup`）。default blueprint はこのステージを name だけで定義しているため、worker 再起動などで default blueprint が再適用されても上書きした設定は戻らない
+
+### メールの確認（Mailpit）
+
+`mailpit/` の Mailpit（namespace `mailpit`）が認証・TLS なしで SMTP（1025）を受け、届いたメールを Web UI（8025）で見られる。宛先のドメインに関係なくすべて Mailpit に溜まり、外部には送られない。
+
+```sh
+kubectl -n mailpit port-forward svc/mailpit 8025:8025
+```
+
+http://localhost:8025/ を開き、ログイン時に送られたコードを確認して入力する。Mailpit はメールを Pod 内にしか持たないので、Pod が再起動すると消える。
 
 ### MFA デバイスを失くした場合
 
@@ -162,9 +179,8 @@ blueprint は default blueprint が作るステージ `default-authentication-mf
 ```sh
 kubectl -n authentik exec -it deploy/authentik-worker -- ak shell -c '
 from authentik.core.models import User
-from authentik.stages.authenticator_totp.models import TOTPDevice
-from authentik.stages.authenticator_webauthn.models import WebAuthnDevice
+from authentik.stages.authenticator_email.models import EmailDevice
 user = User.objects.get(username="akadmin")
-print(TOTPDevice.objects.filter(user=user).delete(), WebAuthnDevice.objects.filter(user=user).delete())
+print(EmailDevice.objects.filter(user=user).delete())
 '
 ```

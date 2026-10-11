@@ -3,22 +3,36 @@ version: 1
 metadata:
   name: mfa-required
 entries:
-# 上書き対象のステージと登録ステージを作る default blueprint を先に適用させる
+# 上書き対象のステージを作る default blueprint を先に適用させる
 - model: authentik_blueprints.metaapplyblueprint
   attrs:
     identifiers:
       path: default/flow-default-authentication-flow.yaml
     required: true
-- model: authentik_blueprints.metaapplyblueprint
+# メール OTP の登録用 flow / stage は default blueprint にないのでここで作る
+- model: authentik_flows.flow
+  id: email-setup-flow
+  identifiers:
+    slug: default-authenticator-email-setup
   attrs:
-    identifiers:
-      path: default/flow-default-authenticator-totp-setup.yaml
-    required: true
-- model: authentik_blueprints.metaapplyblueprint
+    name: default-authenticator-email-setup
+    title: Set up Email Two-Factor authentication
+    designation: stage_configuration
+    authentication: require_authenticated
+- model: authentik_stages_authenticator_email.authenticatoremailstage
+  id: email-setup-stage
+  identifiers:
+    name: default-authenticator-email-setup
   attrs:
-    identifiers:
-      path: default/flow-default-authenticator-webauthn-setup.yaml
-    required: true
+    configure_flow: !KeyOf email-setup-flow
+    friendly_name: Email OTP
+    # 接続先と送信元は values.yaml の authentik.email（Mailpit）に一本化する
+    use_global_settings: true
+- model: authentik_flows.flowstagebinding
+  identifiers:
+    order: 0
+    stage: !KeyOf email-setup-stage
+    target: !KeyOf email-setup-flow
 # default blueprint はこのステージを name だけで定義しているので、ここで設定した属性は再適用で戻らない。
 # Google ログイン（default-source-authentication）はこのステージを通らないので MFA の対象外になる
 - model: authentik_stages_authenticator_validate.authenticatorvalidatestage
@@ -27,8 +41,6 @@ entries:
   attrs:
     not_configured_action: configure
     device_classes:
-    - totp
-    - webauthn
+    - email
     configuration_stages:
-    - !Find [authentik_stages_authenticator_totp.authenticatortotpstage, [name, default-authenticator-totp-setup]]
-    - !Find [authentik_stages_authenticator_webauthn.authenticatorwebauthnstage, [name, default-authenticator-webauthn-setup]]
+    - !KeyOf email-setup-stage
