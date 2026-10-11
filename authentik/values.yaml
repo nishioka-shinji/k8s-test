@@ -39,6 +39,13 @@ global:
 authentik:
   error_reporting:
     enabled: false
+  # MFA のメール OTP を mailpit/ のテスト用 SMTP サーバーへ送る（認証・TLS なし）
+  email:
+    host: mailpit.mailpit.svc.cluster.local
+    port: 1025
+    use_tls: false
+    use_ssl: false
+    from: authentik <authentik@example.com>
   # kind で動かす前提なので web ワーカー数を最小にしてメモリ消費を抑える
   web:
     workers: 1

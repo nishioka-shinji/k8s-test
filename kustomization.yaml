@@ -6,6 +6,7 @@ resources:
 - imgproxy-2
 - prometheus
 - authentik
+- mailpit
 - caddy-demo
 - cert-manager
 - openfeature
