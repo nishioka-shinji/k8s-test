@@ -10,6 +10,17 @@ GitHub は同期元にしない。
 | `apps.yaml` | 同期するアプリの Kustomization。検証したいアプリだけを宣言する（既定は空） |
 | `local-registry.sh` | ローカルレジストリ `kind-registry` の起動（冪等） |
 
+## 0. クラスタを作る
+
+リポジトリ直下で実行する。`kind/cluster.yaml` は control-plane 1 台と worker 2 台の構成で、node image を digest まで固定している。
+
+```sh
+kind create cluster --config kind/cluster.yaml
+kubectl get nodes
+```
+
+worker を 2 台にしているのは、istio-demo の curl と httpbin を別ノードに置き、ztunnel のノード間 HBONE を確かめるため。
+
 ## 1. ローカルレジストリを起動する
 
 kind 公式手順（https://kind.sigs.k8s.io/docs/user/local-registry/ ）のステップ 1・4・5 を実行する。

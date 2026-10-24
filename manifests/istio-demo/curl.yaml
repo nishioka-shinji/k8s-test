@@ -13,6 +13,14 @@ spec:
       labels:
         app.kubernetes.io/name: curl
     spec:
+      # 送信側と受信側の ztunnel が別ノードになるよう httpbin と同じノードに置かない。
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app.kubernetes.io/name: httpbin
+            topologyKey: kubernetes.io/hostname
       containers:
       - name: curl
         image: curlimages/curl:8.23.0

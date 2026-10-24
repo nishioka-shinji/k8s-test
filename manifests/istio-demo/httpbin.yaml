@@ -13,6 +13,14 @@ spec:
       labels:
         app.kubernetes.io/name: httpbin
     spec:
+      # curl 側にも同じ指定があり、どちらが先に起動しても別ノードに分かれる。
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app.kubernetes.io/name: curl
+            topologyKey: kubernetes.io/hostname
       containers:
       - name: httpbin
         image: mccutchen/go-httpbin:2.26.0
