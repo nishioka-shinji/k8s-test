@@ -3,5 +3,7 @@ kind: Namespace
 metadata:
   name: kiali
   labels:
+    # kiali 宛ての通信を ztunnel が受信側として記録し、グラフで ingress → kiali の辺を出すため。
+    istio.io/dataplane-mode: ambient
     # istio-ingress の共有 Gateway に HTTPRoute をぶら下げるため。
     shared-gateway-access: "true"

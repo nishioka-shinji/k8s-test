@@ -1,0 +1,17 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: kiali-hbone
+spec:
+  # ambient では ztunnel 間の通信が Pod IP の HBONE ポートに届くが、
+  # chart の NetworkPolicy kiali は 20001 / 9090 しか許可せず遮断されるため。
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: kiali
+      app.kubernetes.io/name: kiali
+  policyTypes:
+  - Ingress
+  ingress:
+  - ports:
+    - protocol: TCP
+      port: 15008
