@@ -111,6 +111,7 @@ spec:
 | istio-demo | istio（外から入る確認をするなら istio-ingress も） | istio（timeout 10m0s） | istio-demo → istio |
 | kiali | istio、prometheus（外から入るなら istio-ingress も） | istio、prometheus（timeout 10m0s） | kiali → istio、kiali → prometheus |
 | istio-external | istio | istio（timeout 10m0s） | istio-external → istio |
+| dependency-track | istio（外から入るなら istio-ingress も） | istio（timeout 10m0s） | dependency-track → istio |
 
 authentik / mailpit / caddy-demo / unleash / unleash-demo は CRD・webhook の依存がなく、単独で宣言できる。
 istio は単独で宣言できるが、Gateway API と Istio の CRD を提供し 4 つの HelmRelease の完了を待たせるため `wait: true`（timeout 10m0s）を付ける。
@@ -118,3 +119,4 @@ istio-ingress は istio が入れる Gateway API の CRD（Gateway）を使う�
 istio-demo は istio が入れる Gateway API の CRD（HTTPRoute）を使い、istio-cni と ztunnel が揃ってから Pod を起動して ambient 参加を確認するため `dependsOn` を付ける。HTTPRoute が istio-ingress の Gateway を指すのは名前の参照だけで、Gateway が後から揃えば受け付けられるため、istio-ingress への `dependsOn` は付けない。
 kiali は istio が入れる Gateway API の CRD（HTTPRoute）と、prometheus が入れる Prometheus Operator の CRD（PodMonitor / ServiceMonitor）を使うため、両方に `dependsOn` を付ける。Istio のメトリクスを収集する PodMonitor / ServiceMonitor を kiali 側に置く理由は `manifests/kiali/README.md` の「メトリクス収集」を参照する。istio-ingress への `dependsOn` を付けない理由は istio-demo と同じ。
 istio-external は istio が入れる Istio の CRD（ServiceEntry）を使うため `dependsOn` を付ける。外部宛先を名前付きで見るためだけのもので、kiali / prometheus への依存はない。
+dependency-track は istio が入れる Gateway API の CRD（HTTPRoute）を使い、ambient に参加する Pod を istio-cni と ztunnel が揃ってから起動するため `dependsOn` を付ける。istio-ingress への `dependsOn` を付けない理由は istio-demo と同じ。

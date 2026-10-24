@@ -92,3 +92,18 @@ spec:
   sourceRef:
     kind: OCIRepository
     name: flux-system
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: dependency-track
+  namespace: flux-system
+spec:
+  dependsOn:
+  - name: istio
+  interval: 10m0s
+  path: ./dependency-track
+  prune: true
+  sourceRef:
+    kind: OCIRepository
+    name: flux-system
