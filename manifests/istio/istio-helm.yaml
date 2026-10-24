@@ -1,0 +1,82 @@
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: istio
+  namespace: istio-system
+spec:
+  interval: 1m0s
+  url: https://blob.istio.io/istio-release/charts
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: istio-base
+  namespace: istio-system
+spec:
+  chart:
+    spec:
+      chart: base
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: istio
+      version: 1.31.3
+  interval: 1m0s
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: istiod
+  namespace: istio-system
+spec:
+  chart:
+    spec:
+      chart: istiod
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: istio
+      version: 1.31.3
+  dependsOn:
+  - name: istio-base
+  interval: 1m0s
+  values:
+    profile: ambient
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: istio-cni
+  namespace: istio-system
+spec:
+  chart:
+    spec:
+      chart: cni
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: istio
+      version: 1.31.3
+  dependsOn:
+  - name: istiod
+  interval: 1m0s
+  values:
+    profile: ambient
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: ztunnel
+  namespace: istio-system
+spec:
+  chart:
+    spec:
+      chart: ztunnel
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: istio
+      version: 1.31.3
+  dependsOn:
+  - name: istio-cni
+  interval: 1m0s

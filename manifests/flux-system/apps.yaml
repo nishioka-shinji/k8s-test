@@ -1,3 +1,33 @@
 # 同期の入口をここに揃え、アプリごとに Flux Kustomization を分けて同期と prune の単位を独立させる。
 # CRD や webhook を他のアプリが提供するものは、1 つの Kustomization にまとめると dry-run が通らないため、
 # 提供元を wait 付きで先に適用し、利用側を dependsOn で後に適用する。
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: istio
+  namespace: flux-system
+spec:
+  interval: 10m0s
+  path: ./istio
+  prune: true
+  sourceRef:
+    kind: OCIRepository
+    name: flux-system
+  timeout: 10m0s
+  wait: true
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: istio-demo
+  namespace: flux-system
+spec:
+  dependsOn:
+  - name: istio
+  interval: 10m0s
+  path: ./istio-demo
+  prune: true
+  sourceRef:
+    kind: OCIRepository
+    name: flux-system
