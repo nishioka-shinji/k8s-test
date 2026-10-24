@@ -1,7 +1,7 @@
 https://fluxcd.io/flux/use-cases/helm/
 
 ```
-flux create source helm imgproxy --url https://helm.imgproxy.net/ --namespace imgproxy --export > imgproxy/imgproxy-helm.yaml
+flux create source helm imgproxy --url https://helm.imgproxy.net/ --namespace imgproxy --export > manifests/imgproxy/imgproxy-helm.yaml
 ```
 
 ```
@@ -9,5 +9,5 @@ flux create helmrelease imgproxy --chart imgproxy \
   --source HelmRepository/imgproxy \
   --namespace imgproxy \
   --chart-version 0.9.0 \
-  --export >> imgproxy/imgproxy-helm.yaml
+  --export >> manifests/imgproxy/imgproxy-helm.yaml
 ```

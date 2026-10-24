@@ -1,10 +1,10 @@
 https://docs.goauthentik.io/install-config/install/kubernetes/
 
-Flux の HelmRelease で管理する。使うときは `flux-system/apps.yaml` に Flux Kustomization `authentik` を宣言して `authentik/` を同期する。
+Flux の HelmRelease で管理する。使うときは `manifests/flux-system/apps.yaml` に Flux Kustomization `authentik` を宣言して `manifests/authentik/` を同期する。
 
 chart: goauthentik/authentik `2026.8.3`
 
-手作業は Secret `authentik-credentials` の作成だけ。akadmin（bootstrap）、Google ソース、Caddy 動作確認アプリ（`caddy-demo/`）の Authentik 側設定、パスワードログインの MFA（メール OTP）必須化はすべてマニフェストと blueprint から作られる。
+手作業は Secret `authentik-credentials` の作成だけ。akadmin（bootstrap）、Google ソース、Caddy 動作確認アプリ（`manifests/caddy-demo/`）の Authentik 側設定、パスワードログインの MFA（メール OTP）必須化はすべてマニフェストと blueprint から作られる。
 
 ## 構成
 
@@ -12,9 +12,9 @@ chart: goauthentik/authentik `2026.8.3`
 |---|---|
 | `namespace.yaml` | Namespace `authentik` |
 | `authentik-helm.yaml` | HelmRepository `goauthentik`、HelmRelease `authentik`（values は `valuesFrom` で ConfigMap から読む） |
-| `values.yaml` | chart の values。kustomize の configMapGenerator で ConfigMap `authentik-values-<hash>` になる。グローバルのメール設定（`authentik.email`）は Mailpit（`mailpit/`）に向けている |
+| `values.yaml` | chart の values。kustomize の configMapGenerator で ConfigMap `authentik-values-<hash>` になる。グローバルのメール設定（`authentik.email`）は Mailpit（`manifests/mailpit/`）に向けている |
 | `blueprint-google.yaml` | blueprint。Google OAuth ソース `google`、property mapping `google-username-from-email`、`default-authentication-identification` ステージへのソース追加 |
-| `blueprint-caddy-demo.yaml` | blueprint。`caddy-demo/` の Caddy 動作確認アプリ向けの Proxy Provider / Application / outpost 割り当て（後述） |
+| `blueprint-caddy-demo.yaml` | blueprint。`manifests/caddy-demo/` の Caddy 動作確認アプリ向けの Proxy Provider / Application / outpost 割り当て（後述） |
 | `blueprint-mfa.yaml` | blueprint。パスワードログインの MFA（メール OTP）必須化と、メール OTP の登録用 flow / stage（後述） |
 
 blueprint の ConfigMap は `values.yaml` の `blueprints.configMaps` で worker にマウントされる。ConfigMap と HelmRelease は同じ kustomize で同時に apply され、helm-controller が install するのはその後なので、ConfigMap 不在で worker が起動しない問題は起きない。
@@ -26,7 +26,7 @@ blueprint を追加した apply では、rollout 中に新しい ConfigMap を�
 Secret はリポジトリに置かず手で作る。HelmRelease より先に作っておく（後から作った場合は Pod が Secret 待ちになり、作成後に起動する）。
 
 ```sh
-kubectl apply -f authentik/namespace.yaml
+kubectl apply -f manifests/authentik/namespace.yaml
 printf 'Google Client ID: ' && read -r GOOGLE_CLIENT_ID
 printf 'Google Client Secret: ' && read -rs GOOGLE_CLIENT_SECRET && echo
 printf 'akadmin password: ' && read -rs AKADMIN_PASSWORD && echo
@@ -66,7 +66,7 @@ kind create cluster
 ### 2. Flux controller 導入
 
 ```sh
-kubectl apply -f flux-system/gotk-components.yaml
+kubectl apply -f manifests/flux-system/gotk-components.yaml
 kubectl -n flux-system wait --for=condition=Available deploy --all --timeout=300s
 ```
 
@@ -80,16 +80,16 @@ kubectl -n flux-system wait --for=condition=Available deploy --all --timeout=300
 
 #### A. Flux（ローカルレジストリへ push して同期する）
 
-手順は `flux-system/README.md`。`flux-system/apps.yaml` に authentik / mailpit / caddy-demo のうち使うものを Flux Kustomization として宣言し、push すると同期される。
+手順は `manifests/flux-system/README.md`。`manifests/flux-system/apps.yaml` に authentik / mailpit / caddy-demo のうち使うものを Flux Kustomization として宣言し、push すると同期される。
 
 #### B. kubectl apply -k（マージ前のブランチを試す）
 
-GitHub 同期はせず、ローカルの `authentik/`、`mailpit/`、`caddy-demo/` だけを入れる。helm-controller / source-controller が HelmRelease を処理する。
+GitHub 同期はせず、ローカルの `manifests/authentik/`、`manifests/mailpit/`、`manifests/caddy-demo/` だけを入れる。helm-controller / source-controller が HelmRelease を処理する。
 
 ```sh
-kubectl apply -k authentik
-kubectl apply -k mailpit
-kubectl apply -k caddy-demo
+kubectl apply -k manifests/authentik
+kubectl apply -k manifests/mailpit
+kubectl apply -k manifests/caddy-demo
 ```
 
 authentik → caddy-demo の順を推奨する。逆順でも Caddy は Authentik の起動を待たずに立ち上がり、Authentik 起動後に forward auth が通るようになる。
@@ -133,7 +133,7 @@ http://localhost:9000/source/oauth/callback/google/
 
 ## Caddy 動作確認アプリの blueprint
 
-Caddy アプリ本体（Deployment / Service / Caddyfile）は `caddy-demo/` にあり、説明は `caddy-demo/README.md`。ここには Authentik 側の設定だけを置く。
+Caddy アプリ本体（Deployment / Service / Caddyfile）は `manifests/caddy-demo/` にあり、説明は `manifests/caddy-demo/README.md`。ここには Authentik 側の設定だけを置く。
 
 `blueprint-caddy-demo.yaml` は configMapGenerator で ConfigMap `authentik-blueprint-caddy-demo`（authentik namespace、suffix なし）になり、次を作る。
 
@@ -159,7 +159,7 @@ blueprint は次を作る / 上書きする。
 
 ### メールの確認（Mailpit）
 
-`mailpit/` の Mailpit（namespace `mailpit`）が認証・TLS なしで SMTP（1025）を受け、届いたメールを Web UI（8025）で見られる。宛先のドメインに関係なくすべて Mailpit に溜まり、外部には送られない。
+`manifests/mailpit/` の Mailpit（namespace `mailpit`）が認証・TLS なしで SMTP（1025）を受け、届いたメールを Web UI（8025）で見られる。宛先のドメインに関係なくすべて Mailpit に溜まり、外部には送られない。
 
 ```sh
 kubectl -n mailpit port-forward svc/mailpit 8025:8025

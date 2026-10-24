@@ -1,8 +1,8 @@
 # caddy-demo
 
-Authentik の埋め込み outpost で forward auth（Proxy Provider の forward_single）を確認する Caddy アプリ。使うときは `flux-system/apps.yaml` に Flux Kustomization `caddy-demo` を宣言して同期する。
+Authentik の埋め込み outpost で forward auth（Proxy Provider の forward_single）を確認する Caddy アプリ。使うときは `manifests/flux-system/apps.yaml` に Flux Kustomization `caddy-demo` を宣言して同期する。
 
-Authentik 側の設定（Proxy Provider / Application / outpost 割り当て）は `authentik/blueprint-caddy-demo.yaml` にあり、説明は `authentik/README.md` の「Caddy 動作確認アプリの blueprint」。
+Authentik 側の設定（Proxy Provider / Application / outpost 割り当て）は `manifests/authentik/blueprint-caddy-demo.yaml` にあり、説明は `manifests/authentik/README.md` の「Caddy 動作確認アプリの blueprint」。
 
 ## 構成
 
@@ -14,10 +14,10 @@ Authentik 側の設定（Proxy Provider / Application / outpost 割り当て）�
 
 ## apply
 
-Authentik の再構築手順（`authentik/README.md`）の後に入れる。
+Authentik の再構築手順（`manifests/authentik/README.md`）の後に入れる。
 
 ```sh
-kubectl apply -k caddy-demo
+kubectl apply -k manifests/caddy-demo
 kubectl -n caddy-demo get pods
 ```
 
