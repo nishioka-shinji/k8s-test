@@ -1,0 +1,21 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: ingress
+  namespace: istio-ingress
+  annotations:
+    # kind には LoadBalancer がないため、自動生成される Service を ClusterIP にして port-forward で入る。
+    networking.istio.io/service-type: ClusterIP
+spec:
+  gatewayClassName: istio
+  listeners:
+  - name: http
+    port: 80
+    protocol: HTTP
+    allowedRoutes:
+      namespaces:
+        # 共有 Gateway にぶら下がれるのは、ラベルで明示的に参加した Namespace の HTTPRoute だけにする。
+        from: Selector
+        selector:
+          matchLabels:
+            shared-gateway-access: "true"

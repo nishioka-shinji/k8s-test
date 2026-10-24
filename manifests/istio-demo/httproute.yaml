@@ -1,0 +1,15 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: httpbin
+  namespace: istio-demo
+spec:
+  parentRefs:
+  - name: ingress
+    namespace: istio-ingress
+  hostnames:
+  - istio-demo.localhost
+  rules:
+  - backendRefs:
+    - name: httpbin
+      port: 8000
