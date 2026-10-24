@@ -27,3 +27,4 @@ spec:
     prometheus:
       prometheusSpec:
         serviceMonitorSelectorNilUsesHelmValues: false
+        podMonitorSelectorNilUsesHelmValues: false
