@@ -3,11 +3,15 @@
 kind クラスタの Flux（v2.9.6）は、手元の作業ツリーをローカルレジストリへ push した OCI artifact を同期する。
 GitHub は同期元にしない。
 
+flux-system Namespace は Istio ambient に参加させる。`gotk-components.yaml` は生成物なので、`istio.io/dataplane-mode: ambient` ラベルは `kustomization.yaml` の patches で付ける。
+ambient では他 namespace からの通信も Pod IP の TCP 15008（HBONE）に届く。生成物の NetworkPolicy `allow-scraping`（8080）と `allow-webhooks`（9292）は他 namespace からの Ingress をそのポートにしか許可せず遮断されるため、`networkpolicy.yaml` で 15008 を追加で許可する。
+
 | ファイル | 内容 |
 |---|---|
 | `gotk-components.yaml` | Flux 本体（`flux install --export` で生成） |
 | `gotk-sync.yaml` | 同期元の OCIRepository と、`manifests/kustomization.yaml` を適用する Kustomization |
 | `apps.yaml` | 同期するアプリの Kustomization。検証したいアプリだけを宣言する（既定は空） |
+| `networkpolicy.yaml` | NetworkPolicy `allow-hbone`（全 namespace から flux-system の全 Pod への Ingress TCP 15008 を許可） |
 | `local-registry.sh` | ローカルレジストリ `kind-registry` の起動（冪等） |
 
 ## 0. クラスタを作る

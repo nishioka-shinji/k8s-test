@@ -7,10 +7,11 @@ Kiali 2.33.0 を operator なしの `kiali-server` chart で入れ、`manifests/
 
 | ファイル | 内容 |
 |---|---|
-| `namespace.yaml` | Namespace `kiali`（共有 Gateway に参加する `shared-gateway-access: "true"` ラベル付き） |
+| `namespace.yaml` | Namespace `kiali`（ambient に参加する `istio.io/dataplane-mode: ambient` と、共有 Gateway に参加する `shared-gateway-access: "true"` ラベル付き） |
 | `kiali-helm.yaml` | HelmRepository `kiali` と HelmRelease `kiali`（chart `kiali-server`） |
 | `istio-monitor.yaml` | PodMonitor `envoy-stats-monitor` と ServiceMonitor `istio-component-monitor`（Istio のメトリクス収集） |
 | `httproute.yaml` | HTTPRoute `kiali`（`istio-ingress` の Gateway `ingress` で Host `kiali.localhost` を `kiali:20001` へ向ける） |
+| `networkpolicy.yaml` | NetworkPolicy `kiali-hbone`（Kiali の Pod への Ingress TCP 15008 を許可） |
 
 HelmRelease の values は次のとおり。
 
@@ -19,7 +20,8 @@ HelmRelease の values は次のとおり。
 - `external_services.grafana.enabled` / `external_services.tracing.enabled`: `false`。接続先を置いていないため、到達できない警告を出さない
 - `istio_namespace: istio-system`
 
-kiali Namespace は ambient に参加させない。Kiali は Prometheus と Kubernetes API を読むだけで、メッシュ内の通信を観測する側にいるため。
+kiali Namespace は ambient に参加させる。ambient の外にある Pod 宛ての通信は ztunnel が受信側（`reporter="destination"`）として記録しないため、Kiali の Namespace グラフで `kiali` を選ぶと `istio-ingress` → `kiali` の辺が出ない。waypoint は置かないので、この辺は ztunnel の L4（TCP）メトリクスだけで描かれる。
+ambient では ztunnel 間の通信が Pod IP の TCP 15008（HBONE）に届く。chart が既定で作る NetworkPolicy `kiali` は Ingress を 20001 / 9090 にしか許可せず、そのままでは `kiali.localhost` も `kiali.kiali:20001` もタイムアウトするため、`networkpolicy.yaml` で 15008 を追加で許可する。chart 側の NetworkPolicy は無効化しない。
 
 ## バージョン
 

@@ -6,3 +6,4 @@ resources:
 - kiali-helm.yaml
 - istio-monitor.yaml
 - httproute.yaml
+- networkpolicy.yaml
