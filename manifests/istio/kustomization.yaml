@@ -1,0 +1,7 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+# waypoint は Gateway API の Gateway で作るため、Istio 1.31 の公式手順が指定する版の CRD を入れる。
+- https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.6.0/standard-install.yaml
+- namespace.yaml
+- istio-helm.yaml

@@ -92,5 +92,8 @@ spec:
 | openfeature | cert-manager | cert-manager（timeout 5m0s） | openfeature → cert-manager |
 | openfeature-demo | cert-manager、openfeature | cert-manager、openfeature（timeout 5m0s） | openfeature → cert-manager、openfeature-demo → openfeature |
 | imgproxy-2 | prometheus | prometheus（timeout 10m0s） | imgproxy-2 → prometheus |
+| istio-demo | istio | istio（timeout 10m0s） | istio-demo → istio |
 
 authentik / mailpit / caddy-demo / unleash / unleash-demo は CRD・webhook の依存がなく、単独で宣言できる。
+istio は単独で宣言できるが、Gateway API と Istio の CRD を提供し 4 つの HelmRelease の完了を待たせるため `wait: true`（timeout 10m0s）を付ける。
+istio-demo は CRD を使わないが、istio-cni と ztunnel が揃ってから Pod を起動して ambient 参加を確認するため `dependsOn` を付ける。
