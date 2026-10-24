@@ -1,0 +1,34 @@
+# Dependency-Track 5 は PostgreSQL が必須だが chart は DB を同梱しないため、chart の quickstart と同じく永続化なしで置く。
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: dependency-track
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:18-alpine
+        env:
+        - name: POSTGRES_DB
+          value: dtrack
+        - name: POSTGRES_USER
+          value: dtrack
+        - name: POSTGRES_PASSWORD
+          value: dtrack
+        ports:
+        - name: postgres
+          containerPort: 5432
+        readinessProbe:
+          exec:
+            command: ["pg_isready", "-U", "dtrack"]
+          initialDelaySeconds: 5
+          periodSeconds: 5

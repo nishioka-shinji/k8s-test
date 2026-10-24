@@ -1,0 +1,27 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: dependency-track
+  namespace: dependency-track
+spec:
+  parentRefs:
+  - name: ingress
+    namespace: istio-ingress
+  hostnames:
+  - dependency-track.localhost
+  rules:
+  # UI は API を同じホストの /api 配下（/api/version、/api/v1、/api/v2）にしか投げないため、/api だけ api-server へ振る。
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /api
+    backendRefs:
+    - name: dependency-track-api-server
+      port: 8080
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /
+    backendRefs:
+    - name: dependency-track-frontend
+      port: 8080

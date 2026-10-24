@@ -1,0 +1,56 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: dependency-track
+  namespace: dependency-track
+spec:
+  interval: 1m0s
+  url: https://dependencytrack.github.io/helm-charts
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: dependency-track
+  namespace: dependency-track
+spec:
+  chart:
+    spec:
+      chart: dependency-track
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: dependency-track
+      version: 2.8.0
+  interval: 1m0s
+  # 初回は image pull と DB の migration で既定の 5m を超えることがある
+  timeout: 10m0s
+  values:
+    database:
+      jdbcUrl: jdbc:postgresql://postgres:5432/dtrack?reWriteBatchedInserts=true
+      username: dtrack
+      password: dtrack
+    secretManagement:
+      database:
+        kek:
+          # chart は KEK を生成しない。テスト環境なので chart の quickstart と同じ公開の固定値を使う。
+          value: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+    fileStorage:
+      local:
+        size: 2Gi
+    apiServer:
+      # postgres と同時に適用されるため、DB が応答するまで api-server の起動を待たせる。
+      initContainers:
+      - name: wait-for-postgres
+        image: postgres:18-alpine
+        command:
+        - sh
+        - -c
+        - until pg_isready -h postgres -p 5432; do echo waiting for postgres; sleep 2; done
+      web:
+        resources:
+          requests:
+            cpu: 250m
+            memory: 1Gi
+          limits:
+            memory: 1Gi
