@@ -1,0 +1,38 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: kiali
+  namespace: kiali
+spec:
+  interval: 1m0s
+  url: https://kiali.org/helm-charts
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: kiali
+  namespace: kiali
+spec:
+  chart:
+    spec:
+      chart: kiali-server
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: kiali
+      version: 2.33.0
+  interval: 1m0s
+  values:
+    auth:
+      # テスト環境なのでログインを省く。
+      strategy: anonymous
+    external_services:
+      prometheus:
+        url: http://kube-prometheus-stack-prometheus.prometheus:9090
+      # 接続先を置いていないため、無効にして到達できない警告を出さない。
+      grafana:
+        enabled: false
+      tracing:
+        enabled: false
+    istio_namespace: istio-system

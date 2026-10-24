@@ -46,3 +46,34 @@ spec:
   sourceRef:
     kind: OCIRepository
     name: flux-system
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: prometheus
+  namespace: flux-system
+spec:
+  interval: 10m0s
+  path: ./prometheus
+  prune: true
+  sourceRef:
+    kind: OCIRepository
+    name: flux-system
+  timeout: 10m0s
+  wait: true
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: kiali
+  namespace: flux-system
+spec:
+  dependsOn:
+  - name: istio
+  - name: prometheus
+  interval: 10m0s
+  path: ./kiali
+  prune: true
+  sourceRef:
+    kind: OCIRepository
+    name: flux-system

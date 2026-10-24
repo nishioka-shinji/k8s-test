@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kiali
+  labels:
+    # istio-ingress の共有 Gateway に HTTPRoute をぶら下げるため。
+    shared-gateway-access: "true"
