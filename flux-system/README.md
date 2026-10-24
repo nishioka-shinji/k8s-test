@@ -7,7 +7,7 @@ GitHub は同期元にしない。
 |---|---|
 | `gotk-components.yaml` | Flux 本体（`flux install --export` で生成） |
 | `gotk-sync.yaml` | 同期元の OCIRepository と、ルート `kustomization.yaml` を適用する Kustomization |
-| `apps.yaml` | 適用順序が必要なアプリ（CRD・webhook の提供元と利用側）を `dependsOn` で並べた Kustomization |
+| `apps.yaml` | アプリごとの Kustomization。適用順序が必要なもの（CRD・webhook の提供元と利用側）は `wait` / `dependsOn` で並べる |
 | `local-registry.sh` | ローカルレジストリ `kind-registry` の起動（冪等） |
 
 ## 1. ローカルレジストリを起動する
@@ -65,5 +65,5 @@ flux get kustomizations -A
 
 ## アプリを追加するとき
 
-- 他のアプリが提供する CRD や webhook に依存しないものは、ルート `kustomization.yaml` の `resources` に足す
-- 依存するものは `apps.yaml` に Kustomization を足し、提供元に `wait: true`、利用側に `dependsOn` を付ける。ルート `kustomization.yaml` には足さない
+- `apps.yaml` に Kustomization を足す。ルート `kustomization.yaml` には足さない
+- 他のアプリが提供する CRD や webhook に依存するものは、提供元に `wait: true`、利用側に `dependsOn` を付ける。実行時に通信するだけの依存（SMTP、forward auth、API 呼び出しなど）には付けない

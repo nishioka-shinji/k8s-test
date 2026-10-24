@@ -1,6 +1,6 @@
 # caddy-demo
 
-Authentik の埋め込み outpost で forward auth（Proxy Provider の forward_single）を確認する Caddy アプリ。ルートの kustomization.yaml から束ねている。
+Authentik の埋め込み outpost で forward auth（Proxy Provider の forward_single）を確認する Caddy アプリ。`flux-system/apps.yaml` の Flux Kustomization `caddy-demo` が同期する。
 
 Authentik 側の設定（Proxy Provider / Application / outpost 割り当て）は `authentik/blueprint-caddy-demo.yaml` にあり、説明は `authentik/README.md` の「Caddy 動作確認アプリの blueprint」。
 

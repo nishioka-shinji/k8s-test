@@ -1,12 +1,5 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-# 適用順序が必要なアプリ（cert-manager / openfeature / openfeature-demo / prometheus / imgproxy-2）は
-# flux-system/apps.yaml の Flux Kustomization で同期するため、ここには含めない。
+# アプリは flux-system/apps.yaml の Flux Kustomization で 1 つずつ同期するため、ここには flux-system だけを置く。
 resources:
 - flux-system
-# - imgproxy
-- authentik
-- mailpit
-- caddy-demo
-- unleash
-- unleash-demo
