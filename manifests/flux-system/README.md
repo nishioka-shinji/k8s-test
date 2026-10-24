@@ -103,8 +103,10 @@ spec:
 | openfeature | cert-manager | cert-manager（timeout 5m0s） | openfeature → cert-manager |
 | openfeature-demo | cert-manager、openfeature | cert-manager、openfeature（timeout 5m0s） | openfeature → cert-manager、openfeature-demo → openfeature |
 | imgproxy-2 | prometheus | prometheus（timeout 10m0s） | imgproxy-2 → prometheus |
-| istio-demo | istio | istio（timeout 10m0s） | istio-demo → istio |
+| istio-ingress | istio | istio（timeout 10m0s） | istio-ingress → istio |
+| istio-demo | istio（外から入る確認をするなら istio-ingress も） | istio（timeout 10m0s） | istio-demo → istio |
 
 authentik / mailpit / caddy-demo / unleash / unleash-demo は CRD・webhook の依存がなく、単独で宣言できる。
 istio は単独で宣言できるが、Gateway API と Istio の CRD を提供し 4 つの HelmRelease の完了を待たせるため `wait: true`（timeout 10m0s）を付ける。
-istio-demo は CRD を使わないが、istio-cni と ztunnel が揃ってから Pod を起動して ambient 参加を確認するため `dependsOn` を付ける。
+istio-ingress は istio が入れる Gateway API の CRD（Gateway）を使うため `dependsOn` を付ける。
+istio-demo は istio が入れる Gateway API の CRD（HTTPRoute）を使い、istio-cni と ztunnel が揃ってから Pod を起動して ambient 参加を確認するため `dependsOn` を付ける。HTTPRoute が istio-ingress の Gateway を指すのは名前の参照だけで、Gateway が後から揃えば受け付けられるため、istio-ingress への `dependsOn` は付けない。

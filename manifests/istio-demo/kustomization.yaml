@@ -5,3 +5,4 @@ resources:
 - namespace.yaml
 - httpbin.yaml
 - curl.yaml
+- httproute.yaml
