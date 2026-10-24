@@ -1,6 +1,6 @@
 https://docs.goauthentik.io/install-config/install/kubernetes/
 
-Flux の HelmRelease で管理する。ルートの kustomization.yaml から `authentik/` を束ねている。
+Flux の HelmRelease で管理する。使うときは `flux-system/apps.yaml` に Flux Kustomization `authentik` を宣言して `authentik/` を同期する。
 
 chart: goauthentik/authentik `2026.8.3`
 
@@ -78,11 +78,9 @@ kubectl -n flux-system wait --for=condition=Available deploy --all --timeout=300
 
 どちらか一方で入れる。
 
-#### A. Flux bootstrap（GitHub の main を同期する）
+#### A. Flux（ローカルレジストリへ push して同期する）
 
-main にマージ済みの構成を入れる場合。手順は `flux-system/README.md` の `flux bootstrap github`。ルートの kustomization.yaml に含まれる flux-system / imgproxy-2 / prometheus / authentik / mailpit / caddy-demo などがすべて同期される。
-
-bootstrap は CLI のバージョンで `flux-system/gotk-components.yaml` を生成し直して main にコミットするので、意図せず上げないよう CLI は既存と同じ v2.4 系を使う。
+手順は `flux-system/README.md`。`flux-system/apps.yaml` に authentik / mailpit / caddy-demo のうち使うものを Flux Kustomization として宣言し、push すると同期される。
 
 #### B. kubectl apply -k（マージ前のブランチを試す）
 
