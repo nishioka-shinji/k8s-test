@@ -6,7 +6,7 @@ GitHub は同期元にしない。
 | ファイル | 内容 |
 |---|---|
 | `gotk-components.yaml` | Flux 本体（`flux install --export` で生成） |
-| `gotk-sync.yaml` | 同期元の OCIRepository と、ルート `kustomization.yaml` を適用する Kustomization |
+| `gotk-sync.yaml` | 同期元の OCIRepository と、`manifests/kustomization.yaml` を適用する Kustomization |
 | `apps.yaml` | 同期するアプリの Kustomization。検証したいアプリだけを宣言する（既定は空） |
 | `local-registry.sh` | ローカルレジストリ `kind-registry` の起動（冪等） |
 
@@ -16,7 +16,7 @@ kind 公式手順（https://kind.sigs.k8s.io/docs/user/local-registry/ ）のス
 `kind-registry`（registry:3）を `127.0.0.1:5001` で起動して kind ネットワークに接続し、kube-public に `local-registry-hosting` ConfigMap を置く。
 
 ```sh
-./flux-system/local-registry.sh
+./manifests/flux-system/local-registry.sh
 ```
 
 source-controller は Pod 内から `kind-registry:5000` を直接読むため、containerd の hosts.toml（ステップ 2・3）は設定しない。
@@ -24,7 +24,7 @@ source-controller は Pod 内から `kind-registry:5000` を直接読むため�
 ## 2. Flux をインストールする
 
 ```sh
-kubectl apply --server-side -f flux-system/gotk-components.yaml
+kubectl apply --server-side -f manifests/flux-system/gotk-components.yaml
 flux check
 ```
 
@@ -33,19 +33,18 @@ Flux のバージョンを上げるときは `gotk-components.yaml` を再生成
 ```sh
 flux install --export \
   --components=source-controller,kustomize-controller,helm-controller,notification-controller \
-  > flux-system/gotk-components.yaml
+  > manifests/flux-system/gotk-components.yaml
 ```
 
 ## 3. マニフェストを push する
 
-リポジトリ直下で実行する。`.git` や `daily-reports/` など同期対象外のパスは `--ignore-paths` で除外する。
+リポジトリ直下で実行する。`manifests/` だけを push するので、`.git` や `daily-reports/` は対象外になる。
 
 ```sh
 flux push artifact oci://localhost:5001/k8s-test:latest \
-  --path=. \
+  --path=./manifests \
   --source="$(git config --get remote.origin.url)" \
-  --revision="$(git branch --show-current)@sha1:$(git rev-parse HEAD)" \
-  --ignore-paths='.git/,.gitignore,.gitmodules,.gitattributes,.claude/,daily-reports/'
+  --revision="$(git branch --show-current)@sha1:$(git rev-parse HEAD)"
 ```
 
 ## 4. 同期を開始する
@@ -53,7 +52,7 @@ flux push artifact oci://localhost:5001/k8s-test:latest \
 初回だけ同期設定を手で入れる。以降は OCIRepository が 1 分ごとに `latest` を確認し、push した内容が反映される。
 
 ```sh
-kubectl apply -k flux-system
+kubectl apply -k manifests/flux-system
 ```
 
 すぐ反映させたいときは reconcile する。
@@ -83,7 +82,7 @@ spec:
     name: flux-system
 ```
 
-- ルート `kustomization.yaml` には足さない
+- `manifests/kustomization.yaml` には足さない
 - 他のアプリが提供する CRD や webhook に依存するものは、提供元も一緒に宣言し、提供元に `wait: true`（と `timeout`）、利用側に `dependsOn` を付ける。実行時に通信するだけの依存（SMTP、forward auth、API 呼び出しなど）には付けない
 
 依存があるアプリの組み合わせは次のとおり。
