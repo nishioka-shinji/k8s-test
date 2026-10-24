@@ -1,6 +1,6 @@
 https://docs.goauthentik.io/install-config/install/kubernetes/
 
-Flux の HelmRelease で管理する。`flux-system/apps.yaml` の Flux Kustomization `authentik` が `authentik/` を同期する。
+Flux の HelmRelease で管理する。使うときは `flux-system/apps.yaml` に Flux Kustomization `authentik` を宣言して `authentik/` を同期する。
 
 chart: goauthentik/authentik `2026.8.3`
 
@@ -80,7 +80,7 @@ kubectl -n flux-system wait --for=condition=Available deploy --all --timeout=300
 
 #### A. Flux（ローカルレジストリへ push して同期する）
 
-手順は `flux-system/README.md`。`flux-system/apps.yaml` の Flux Kustomization 経由で authentik / mailpit / caddy-demo などがすべて同期される。
+手順は `flux-system/README.md`。`flux-system/apps.yaml` に authentik / mailpit / caddy-demo のうち使うものを Flux Kustomization として宣言し、push すると同期される。
 
 #### B. kubectl apply -k（マージ前のブランチを試す）
 
