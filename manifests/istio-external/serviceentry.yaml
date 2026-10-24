@@ -1,0 +1,131 @@
+# 外部宛先を Kiali / ztunnel のメトリクスで名前付きにするためだけに置き、通信は制限しない。
+# addresses を書かず istiod の自動割り当て VIP と ztunnel の DNS キャプチャで宛先を識別させる。
+# exportTo は ztunnel には効かないが、ingress gateway の Envoy に不要な cluster を配らないため付ける。
+---
+apiVersion: networking.istio.io/v1
+kind: ServiceEntry
+metadata:
+  name: kind-registry
+spec:
+  exportTo:
+  - "."
+  hosts:
+  - kind-registry
+  location: MESH_EXTERNAL
+  ports:
+  - name: http
+    number: 5000
+    protocol: HTTP
+  resolution: DNS
+---
+apiVersion: networking.istio.io/v1
+kind: ServiceEntry
+metadata:
+  name: blob-istio-io
+spec:
+  exportTo:
+  - "."
+  hosts:
+  - blob.istio.io
+  location: MESH_EXTERNAL
+  ports:
+  - name: https
+    number: 443
+    protocol: TLS
+  resolution: DNS
+---
+apiVersion: networking.istio.io/v1
+kind: ServiceEntry
+metadata:
+  name: istio-release-r2-istio-io
+spec:
+  exportTo:
+  - "."
+  hosts:
+  - istio-release.r2.istio.io
+  location: MESH_EXTERNAL
+  ports:
+  - name: https
+    number: 443
+    protocol: TLS
+  resolution: DNS
+---
+apiVersion: networking.istio.io/v1
+kind: ServiceEntry
+metadata:
+  name: kiali-org
+spec:
+  exportTo:
+  - "."
+  hosts:
+  - kiali.org
+  location: MESH_EXTERNAL
+  ports:
+  - name: https
+    number: 443
+    protocol: TLS
+  resolution: DNS
+---
+apiVersion: networking.istio.io/v1
+kind: ServiceEntry
+metadata:
+  name: prometheus-community-github-io
+spec:
+  exportTo:
+  - "."
+  hosts:
+  - prometheus-community.github.io
+  location: MESH_EXTERNAL
+  ports:
+  - name: https
+    number: 443
+    protocol: TLS
+  resolution: DNS
+---
+apiVersion: networking.istio.io/v1
+kind: ServiceEntry
+metadata:
+  name: github-com
+spec:
+  exportTo:
+  - "."
+  hosts:
+  - github.com
+  location: MESH_EXTERNAL
+  ports:
+  - name: https
+    number: 443
+    protocol: TLS
+  resolution: DNS
+---
+apiVersion: networking.istio.io/v1
+kind: ServiceEntry
+metadata:
+  name: release-assets-githubusercontent-com
+spec:
+  exportTo:
+  - "."
+  hosts:
+  - release-assets.githubusercontent.com
+  location: MESH_EXTERNAL
+  ports:
+  - name: https
+    number: 443
+    protocol: TLS
+  resolution: DNS
+---
+apiVersion: networking.istio.io/v1
+kind: ServiceEntry
+metadata:
+  name: grafana-com
+spec:
+  exportTo:
+  - "."
+  hosts:
+  - grafana.com
+  location: MESH_EXTERNAL
+  ports:
+  - name: https
+    number: 443
+    protocol: TLS
+  resolution: DNS
